@@ -11,29 +11,34 @@ binmode(STDOUT, ":utf8");
 my $Version = 2.3
 my $check = 'nf';
 my $help;
-my $VocabularyFile = 'TG_comparative.13.08.05.csv';
-my $CognateFile='TG_cognates.13.08.05.csv';
+my $comparativeFile;
+my $cognateFile;
 my $outputfile = 'output.csv';
 my $errorfile = 'errors.csv';
 
 my $usage = <<HERE;
-convert.pl Version $Version
-Description Parse a cognates tab delimited table and read its corresponding
-comparative file line by line and produce a validation output file with:
+check.pl Version $Version
+Validates cognate and comparative files. The program has two modes, NOT FOUND and MULTIPLE Validation.
+In NOT FOUND mode it validates that all words in the comparative file are present in the cognate file. The output file is a table similar to the comparative file, but with the word NOT FOUND included next to words that are missing. The opposite problem, Words that are present in the cognates file but missing form the comparative file are printed in the error file
+In MULTIPLE mode it reads the cognate file skipping COMPOUND 
 
-Usage ./convert.pl [options]
+Usage ./convert.pl [OPTIONS=XX]
 
 where OPTIONS can be one or more of the following
-
-       -check XX type of validation to do:
-                 XX: nf   Default: NOT FOUND, find words in the comparative missing from the cognate file
-                 XX: m    MULTIPLE: find words that multiple times in the cognates file, excluding compound roots
+  -comparative FILENAME   path and filename of comparative .csv file
+  -cognate     FILENAME   path and filename of cognate .csv file
+  -check       XX         type of validation to do:
+                          XX: nf   Default: NOT FOUND, find words in the comparative missing from the cognate file
+                          XX: m    MULTIPLE: find words that multiple times in the cognates file, excluding compound roots
 
 HERE
 
 #command line options
-unless (GetOptions('check=s' => \$check,
-                   'help|?'  => \$help,
+unless (GetOptions(
+                   'comparative=s' => \$comparativeFile,
+                   'cognate=s'     => \$cognateFile,
+                   'check=s'       => \$check,
+                   'help|?'        => \$help,
                   )){
     die $usage;
 }
@@ -52,8 +57,8 @@ if($check eq 'nf'){
 }
 
 # Remember to read and write with correct encoding
-open VF, '<:encoding(UTF-8)',$VocabularyFile or die $!;
-open CF, '<:encoding(UTF-8)',$CognateFile or die $!;
+open CP, '<:encoding(UTF-8)',$comparativeFile or die $!;
+open CG, '<:encoding(UTF-8)',$cognateFile or die $!;
 open OUT, '>:encoding(UTF-8)',$outputfile or die $!;
 
 my %hash;
@@ -63,7 +68,7 @@ my $lineCounter = 0;
 my @languages;
 my $root;
 #parse cognate file
-while(my $line = <CF>){
+while(my $line = <CG>){
     chomp $line;
     next if $line =~ /^[\s\f\t]*$/; #skip empty lines
     my @ar = split '\t', $line;
@@ -95,7 +100,7 @@ while(my $line = <CF>){
 			  $hash{$languages[$counter].'.'.$w}=[$ar[0]];
 		      }
 		  }
-		  if($word eq '...'){
+		  if(substr($word,0,3) eq '...'){
 		  }
 	      }
 	      $counter++;
@@ -105,13 +110,10 @@ while(my $line = <CF>){
   $lineCounter++;
 }
 
-# use Data::Dumper;
-# print Dumper %hash;
-# exit(0);
 $lineCounter = 0;
 %missing = %hash;
 # parse vocabulary file line by line
-while(my $line = <VF>){
+while(my $line = <CP>){
     chomp $line;
     if($lineCounter == 0){ #languages (header)
 	print OUT $line;    
@@ -165,7 +167,7 @@ while(my $line = <VF>){
 }
 if ($check eq 'nf'){
     open ERR, '>:encoding(UTF-8)',$errorfile or die $!;
-print ERR "language\tword in Cognate table but not in Lexical list\troot(s)\n";
+print ERR "language\tword in Cognate table but not in Comparative file\troot(s)\n";
 foreach my $errors (sort keys %missing){
     $errors =~ /(.*?)\.(.*)/;
     my $roots = join("\t", @{$missing{$errors}});
