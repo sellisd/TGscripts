@@ -96,6 +96,9 @@ while(my $line = readline($cpfh)){
 		    my $language = ${$langref}[$counter];
 		    if (!defined($hashref->{$language.'.'.$w})){
 			print "inconsistency at: $language $w\n";
+			# use Data::Dumper;
+			# print Dumper $hashref;
+			# die;
 		    }else{
 			if($includeWords == 1){
 			    print OUT $w,';',join(';',@{$hashref->{$language.'.'.$w}});
@@ -180,6 +183,7 @@ sub parseWords{
     my $openDelim;
     for(my $i = 0; $i < length($string); $i++){
 	my $char = substr($string,$i,1);
+	next if $char eq '$';
 	if ($inWord == 0){ #outside word
 	    if($char eq '<' or $char eq '[' or $char eq '/'){
 		#in word
