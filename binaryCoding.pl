@@ -17,7 +17,7 @@ if (defined($ARGV[1])){
     $output = 'table.csv';
 }
 my $outSep = "\t";
-my $inSep = '\t';
+my $inSep = "\t";
 #my $file = 'Sampe_TG_coding.csv';
 open IN, '<:encoding(UTF-8)',$file or die $!;
 open OUT, '>:encoding(UTF-8)',$output or die $!;
@@ -38,7 +38,7 @@ foreach my $number (@header){
     if ($counter>0){
         # ignore first title
 	if($previous eq 'small' and $current eq 'small'){
-	    die "$number $counter";
+	    print "Error !!!!: $number $counter\n";
 	}
 	#print header
 	if($current eq 'Capital'){

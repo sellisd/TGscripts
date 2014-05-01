@@ -1,0 +1,28 @@
+scripts for validating and analyzing comparative linguistic tables for TG project
+
+
+Binary coding Cognate file without IND Tags
+./filterCognates.pl
+#libreoffice ../data/TG_cognates.13.11.03.noIND.csv &
+#remove first column and save again
+./transpose.pl ../data/TG_cognates.13.11.03.noIND.csv ../data/TG_cognates.13.11.03.noIND.tr.csv
+./binaryCoding.pl ../data/TG_cognates.13.11.03.noIND.tr.csv ../data/TG_cognates.13.11.03.noIND.tr.bin.csv
+#if errors are produced, go back to the untransposed file and remove consecutive small
+open with mesquite
+
+Binary coding Cognate file without IND Tags
+./filterCognates.pl
+#libreoffice ../data/TG_cognates.13.11.07.GEN.csv &
+#remove first column and save again
+./transpose.pl ../data/TG_cognates.13.11.07.GEN.csv ../data/TG_cognates.13.11.07.GEN.tr.csv
+./binaryCoding.pl ../data/TG_cognates.13.11.07.GEN.tr.csv ../data/TG_cognates.13.11.07.GEN.tr.bin.csv
+#if errors are produced, go back to the untransposed file and remove consecutive small
+open with mesquite
+
+for TG100 filter first with filterCognates and then filterTag and then follow the same procedure as for noIND without removing the first line in libreoffice (filterTag does it
+./filterCognates.pl
+./filterTag.pl -include TG100 -comparative ../data/TG_comparative_online_MASTER.csv -cognate ../data/TG_cognates_online_MASTER.noIND.csv -output ../data/TG_cognates_online_MASTER.noIND.TG100.csv
+
+
+for TG200 filter both TG100 and TG200
+./filterTag.pl -include TG100,TG200 -comparative ../data/TG_comparative_online_MASTER.csv -cognate ../data/TG_cognates_online_MASTER.noIND.csv -output ../data/TG_cognates_online_MASTER.noIND.TG200.csv

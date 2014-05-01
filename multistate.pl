@@ -88,7 +88,7 @@ while(my $line = readline($cpfh)){
 		my $err = $wordsref->{'err'};
 		my @words = @{$wordsref->{'words'}};
 		if ($err == 1){
-		    print $meaning,": @words\n";
+		    print "Odd number of delimiters ",$meaning,": $words[0]\n";
 		    next;
 		}
 		foreach my $w (@words){
@@ -153,7 +153,8 @@ sub parseCognates{
 		my $err = $wordsref->{'err'};
 		my @words = @{$wordsref->{'words'}};
 		if ($err == 1){
-		    print $root,": @words\n";
+		    print "Odd number of delimiters ", $root,": $words[0]\n";
+		    next;
 		}else{
 		    foreach my $w (@words){
 			$w = NFD($w); #decompose & reorder canonically

@@ -30,7 +30,7 @@ error file (errors.csv).
 
 In MULTIPLE mode it reads the cognate file skipping COMPOUND 
 
-Usage ./convert.pl [OPTIONS=XX]
+Usage ./check.pl [OPTIONS=XX]
 
 where OPTIONS can be one or more of the following
   -comparative FILENAME   path and filename of comparative .csv file
