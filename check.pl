@@ -158,6 +158,9 @@ while(my $line = <CP>){
 			if($check eq 'nf'){
 			    if (defined($hash{$languages[$counter].'.'.$w})){
 				print OUT $w,':',"@{$hash{$languages[$counter].'.'.$w}},";
+                                #remove entry fom missing
+				delete $missing{$languages[$counter].'.'.$w};
+
 			    }else{
 				print OUT $w,"NOT FOUND";
 			    }
