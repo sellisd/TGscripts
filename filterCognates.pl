@@ -6,8 +6,10 @@ use feature 'unicode_strings';
 use Unicode::Normalize;
 binmode(STDOUT, ":utf8");
 my $input = '../data/TG_cognates_online_MASTER.csv';
+my @filterTags = qw/IND MED/;
 my $output = $input;
-$output =~s/\.csv/.noIND.csv/;
+my $suffix = join '.',@filterTags;
+$output =~s/\.csv/.no.$suffix.csv/;
 #filter cognates file based on various criteria, e.g.removing all rows that have IND tag
 #                                                   or keeping only the GEN (COMPOUND OR COMPLEX) tags
 
@@ -22,7 +24,13 @@ while (my $line = <IN>){
     foreach my $tag (@tags){
 	$tags{$tag}=1;
     }
-    if(defined($tags{"IND"})){
+    my $excluded = 0; #FALSE
+    foreach my $tag2filter(@filterTags){
+	if(defined($tags{$tag2filter})){
+	    $excluded = 1;
+	}
+    }
+    if($excluded == 1){
      #print nothing
     }else{
 	print OUT $line;
