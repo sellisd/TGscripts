@@ -15,13 +15,16 @@ my @languages = split "\t", $header;
 shift @languages; #remove TAGs
 shift @languages; #remove English
 my @counter = ( (0) x ($#languages + 1) );
+my $total = 0;
 while (my $line = readline($cpfh)){
     next if $line =~ /^[\s\t\f\n\r]*$/; #skip emtpy lines
     chomp $line;
     my @ar = split "\t", $line;
     shift @ar; #remove TAGs
     my $root = shift @ar; #remove root
-    if (substr($root,length($root),1) ne '@'){ #skip lax rows
+#    die $root,' ',length($root),' ',substr($root,(length($root)-1),1);
+    if (substr($root,(length($root)-1),1) ne '@'){ #skip lax rows
+	$total++;
 	for (my $i = 0 ; $i <= $#ar; $i++){
 	    if ($ar[$i] eq '...'){
 		$counter[$i]++;
@@ -31,6 +34,7 @@ while (my $line = readline($cpfh)){
 }
 close $cpfh;
 
+print "languages\tcounts\t\%\ttotal\n";
 for (my $i = 0; $i<=$#languages; $i++){
-  print $languages[$i],"\t",$counter[$i],"\n";
+  print $languages[$i],"\t",$counter[$i],"\t",sprintf("%.2f",100*$counter[$i]/$total),"\t",$total,"\n";
 }
