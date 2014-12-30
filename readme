@@ -26,3 +26,5 @@ for TG100 filter first with filterCognates and then filterTag and then follow th
 
 for TG200 filter both TG100 and TG200
 ./filterTag.pl -include TG100,TG200 -comparative ../data/TG_comparative_online_MASTER.csv -cognate ../data/TG_cognates_online_MASTER.noIND.csv -output ../data/TG_cognates_online_MASTER.noIND.TG200.csv
+
+no funct no kinship

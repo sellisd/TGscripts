@@ -16,7 +16,7 @@ use feature 'unicode_strings';
 #         print error
 
 my $cognateFile = '../data/TG_cognates_online_MASTER.csv';
-my $comparativeFile ='../data/TG_comparative_online_MASTER.csv';
+my $comparativeFile ='../data/TG_comparative_lexical_online_MASTER.csv';
 my $errorsList = '../data/threedotCheck.txt';
 my %hash;
 my %missing;

@@ -142,9 +142,9 @@ while(my $line = <CP>){
     }else{
 	my $counter = 0;
 	if (defined($ar[0])){
-#	    if ($ar[0] =~ /^.*@/){ #skip lines with @ (lax rows)
-#		next;
-#	    }
+	    if ($ar[0] =~ /^.*@/){ #skip lines with @ (lax rows)
+		next;
+	    }
 	}
 	foreach my $entry (@ar){
 	    if($counter == 0){
@@ -211,6 +211,7 @@ sub parseWords{
     my $openDelim;
     for(my $i = 0; $i < length($string); $i++){
 	my $char = substr($string,$i,1);
+	next if $char eq '$';
 	if ($inWord == 0){ #outside word
 	    if($char eq '<' or $char eq '[' or $char eq '/'){
 		#in word

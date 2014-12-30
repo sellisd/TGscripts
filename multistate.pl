@@ -8,7 +8,7 @@ use Unicode::Normalize;
 binmode(STDOUT, ":utf8");
 #read output from convert (-check nf format)
 #and produce a multistate coding table with words and roots
-#if option $dbg is set to true then in the output file the words
+#if option -words is set then in the output file the words
 #are also included e.g  <word>ROOT1 instead of ROOT in each entry
 
 my $Version = 0.01;
