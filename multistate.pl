@@ -48,7 +48,8 @@ open OUT, '>:encoding(UTF-8)',$outputFile or die $!;
 my $hashref;
 my $langref;
 ($hashref,$langref)=parseCognates($cgfh);
-
+use Data::Dumper;
+print Dumper $hashref;die;
 # foreach my $k (keys %{$hashref}){
 #     my @ar = @{$hashref->{$k}};
 #     foreach my $l (@ar){
@@ -126,11 +127,17 @@ sub parseCognates{
     my $lineCounter = 0;
     my @languages;
     my %hash;
+    my $rootHeader;
     while(my $line = readline($cgfh)){
 	next if $line =~ /^[\s\f\t]*$/; #skip empty lines
 	chomp $line;
 	my @ar = split "\t", $line;
 	my $compound = shift @ar; #remove compound column for the rest of analysis
+	my @tags = split /,\s*/, $compound; #split first entry to tags
+	my %tags = ();
+	foreach my $tag (@tags){
+	  $tags{$tag}=1;
+	}
 	if($lineCounter == 0){ #languages (header)
 	    push @languages, @ar;
 	    shift @languages; #remove English
@@ -140,13 +147,12 @@ sub parseCognates{
 		die $line;
 	       }
 	    next if $ar[0] =~ /^.*X$/;
-            #do not filter Compound words
-#	    next if $compound eq 'COMPOUND';
 	    my $counter = 0;
 	    my $root = shift @ar;
 	    if($root ne uc($root)){
-                #first column;
-		next
+              #first column;
+	      $rootHeader = $root;
+	      next
 	    }
 	    foreach my $entry (@ar){
 		my $wordsref = parseWords($entry);
@@ -160,11 +166,12 @@ sub parseCognates{
 			$w = NFD($w); #decompose & reorder canonically
 			if(!defined($languages[$counter])){
 			    die;
-			}
+			  }
+			my $value = [$root, $rootHeader, \%tags];
 			if(defined($hash{$languages[$counter].".".$w})){
-			    push @{$hash{$languages[$counter].".".$w}},$root;
+			    push @{$hash{$languages[$counter].".".$w}},$value;
 			}else{
-			    $hash{$languages[$counter].'.'.$w}=[$root];
+			    $hash{$languages[$counter].'.'.$w}=[$value];
 			}
 		    }
 		}
