@@ -88,84 +88,56 @@ while(my $line = readline($cpfh)){
 	  if (!defined($hashref->{$language.'.'.$w})){
 	    print "inconsistency at: $language $meaning, $w\n";
 	  }else{
-# new pseudocode
-# foundCompound
-# Foreach root (counter)
-#      if tag{compound} or tag{complex}
-#         push foundCompound, counter
-#     if header == meaning
-#         push matches, counter
-
-# IF foundCompound == 0
-# IF all roots are the same
-# print
-# ELSE
-#     print quelqun foss a le fava 
-# IF foundCompound > 1
-#      print warning (choose manually) and continue
-# IF foundCompound == 1
-#     IF it belongs to only one cognate set
-#         print cognate set (with IND or MED if present)
-#     IF it belongs to more than one cognate sets,
-#         IF headerOfCompound == meaning
-#             IF (headersOthers == meaning) == 0
-# print compound [ind/med]
-# IF (headOther == meaning) ==1 (one other)
-# replace the form with the constituent compound set name (other)
-# IF (headersOthers == meaning) >1
-# warning and go to the next form/cell
-#         ELSE (IF headerOfCompound != meaning)
-#             warning and go to next
-
-
 	    #loop through to find which are compounds and which match with meaning
 	    my @foundCompound;
 	    my @matches;
+	    my %roots;
 	    my $counterComp = 0;
 	    foreach my $cognGroup (@{$hashref->{$language.'.'.$w}}){
 	      my $root = ${$cognGroup}[0];
 	      my $header = ${$cognGroup}[1];
 	      my $tagsRef = ${$cognGroup}[2];
-	      if(defined($tagsRef->{'COMPOUND'})){
+	      if(defined($tagsRef->{'COMPOUND'}) or defined($tagsRef->{'COMPLEX'})){
 		push @foundCompound, $counterComp;
 	      }
 	      if($header eq $meaning){
 		push @matches, $counterComp;
 	      }
+	      $roots{$root} = 1;
 	      $counterComp++;
 	    }
-	    if($#foundCompound==0){ 	    # if one is compound
-	      if($#{$hashref->{$language.'.'.$w}}==0){ # if it belongs to only one cognate set
-		print OUT &printCell(\@{$hashref->{$language.'.'.$w}},$w,$includeWords);
-	      }else{ # more than one cognate sets
-		if($#matches == 0){
-		  if ($foundCompound[0] eq $matches[0]){ # if header of compound is same with meaning and all other are different
-		    print OUT $w.';'.${$hashref->{$language.'.'.$w}}[$foundCompound[0]][0];
-		  }else{ # if one header is the same with meaning but it is not compound
-		    print Dumper @{$hashref->{$language.'.'.$w}};
-		    die "one header is the same with meaning but it is not compound";
-		    # warning
+	    my $rootNo = keys %roots;
+	    if(! @foundCompound){                                                        # IF no compounds
+	      if($rootNo == 0){                                                           #   IF all roots are the same
+		print OUT $hashref->{$language.'.'.$w}[0][0];                             #     PRINT the first or only one
+	      }else{                                                                      #   ELSE
+		print OUT "Warning - Multiple roots: ";                                   #     WARNING
+		print OUT Dumper($hashref->{$language.'.'.$w});	                          
+	      }							                          
+	    }elsif($#foundCompound>1){                                                    # ELSE IF more than one compounds
+	      print OUT "Warning - More than 2 compounds: ";                              #   WARNING
+	      print OUT Dumper($hashref->{$language.'.'.$w});	                          
+   #	      print OUT "Il y a une couille dans le potage\n";	                          
+	    }elsif($#foundCompound == 0){                                                 # ELSE IF one compounds
+	      my $cognateSetNo = $#{$hashref->{$language.'.'.$w}};
+	      if($cognateSetNo == 0){                                                     #   IF it belongs to only one cognate set
+	     	print OUT ${$hashref->{$language.'.'.$w}}[0][0];                          #     PRINT
+	      }elsif($cognateSetNo >0){                                                   #   ELSE IF it belongs to multiple cognate sets
+		if(${$hashref->{$language.'.'.$w}}[$foundCompound[0]][1] eq $meaning){    #     IF headerOfCompound == meaning
+		  if($#matches==0){                                                       #       IF only one match
+		    print OUT ${$hashref->{$language.'.'.$w}}[$foundCompound[0]][0];      #         PRINT COMPOUND 
+		    #	    print OUT IND MED
+		  }elsif($#matches==1){                                                   #       ELSE IF two matches
+		    #print other (not COMPLEX)                                                                #         PRINT other
+		  }elsif($#matches>1){                                                    #       ELSE IF more than two matches
+		    print OUT "Warning - More than two headers match meaning: ";          #         WARNING
+		    print OUT Dumper($hashref->{$language.'.'.$w});
 		  }
-		}elsif($#matches==1){ # two total matches
-		  foreach my $m (@matches){
-		    if($foundCompound[0] eq $m){
-		      #do nothing
-		    }else{ 		      #print other (not compound)
-		      print OUT "TWO MATCHES";
-		      print OUT ${$hashref->{$language.'.'.$w}}[$m];
-		    }
-		  }
-		}else{ # more than two matches
-		  print Dumper @{$hashref->{$language.'.'.$w}};
-		  die "more than two matches";
-		  # warning
+		}else{                                                                    #    ELSE
+		  print OUT "Warning - header of Compound does not match meaning: ";      #      WARNING
+		  print OUT Dumper($hashref->{$language.'.'.$w});
 		}
 	      }
-	    }elsif($#foundCompound>1){ # more than one compound
-	      print Dumper @{$hashref->{$language.'.'.$w}};
-	      die "more than one compounds";
-	    }else{  # no compounds
-	      print OUT &printCell(\@{$hashref->{$language.'.'.$w}},$w,$includeWords);
 	    }
 	  }
 	}
@@ -179,7 +151,7 @@ while(my $line = readline($cpfh)){
 }
 close $cgfh;
 close $cpfh;
-  
+
 sub printCell{
   # formats a string for printing from data structure
   # &printCell(ds,word,printWord) if printWord = TRUE also prints word
