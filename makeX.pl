@@ -21,7 +21,7 @@ binmode(STDOUT, ":utf8");
 #     if defined $language{$word}
 #     else noX
 my %hash;
-my $VocabularyFile = '../data/TG_comparative_online_MASTER.csv';
+my $VocabularyFile = '../data/TG_comparative_lexical_online_MASTER.csv';
 my $CognateFile='../data/TG_cognates_online_MASTER.csv';
 my $outputFile = '../data/addX.csv';
 open my $cpfh, '<:encoding(UTF-8)',$VocabularyFile or die $!;

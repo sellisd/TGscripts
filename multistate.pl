@@ -5,13 +5,14 @@ use Encode;
 use feature 'unicode_strings';
 use Getopt::Long;
 use Unicode::Normalize;
+use Data::Dumper;
 binmode(STDOUT, ":utf8");
 #read output from convert (-check nf format)
 #and produce a multistate coding table with words and roots
 #if option -words is set then in the output file the words
 #are also included e.g  <word>ROOT1 instead of ROOT in each entry
 
-my $Version = 0.01;
+my $Version = 0.02;
 my $usage = <<HERE;
 multistate version $Version
 Parses cognate and comparative files and produces a multistate coding table
@@ -48,79 +49,139 @@ open OUT, '>:encoding(UTF-8)',$outputFile or die $!;
 my $hashref;
 my $langref;
 ($hashref,$langref)=parseCognates($cgfh);
-use Data::Dumper;
-print Dumper $hashref;die;
-# foreach my $k (keys %{$hashref}){
-#     my @ar = @{$hashref->{$k}};
-#     foreach my $l (@ar){
-# 	if ($l eq 'EAT1'){
-# 	    print "$k @ar\n";
-# 	}
-#     }
-# }
-
+#print Dumper $hashref;die;
 my $lineCounter = 0;
 while(my $line = readline($cpfh)){
-    chomp $line;
-   if($lineCounter == 0){ #languages (header)
-       my @ar = split "\t", $line;
-       shift @ar; #remove TAG header
-       print OUT join("\t",@ar),"\n";    
+  chomp $line;
+  if($lineCounter == 0){ #languages (header)
+    my @ar = split "\t", $line;
+    shift @ar; #remove TAG header
+    print OUT join("\t",@ar),"\n"; #includes English
+#        print join("\n",@ar),"\n"; #includes English
+  }else{
+    my @ar = split '\t', $line;
+    if (defined($ar[1])){
+      if ($ar[1] =~ /^.*@/){ #skip lines with @ (lax rows)
+	next;
+      }
     }else{
-	my @ar = split '\t', $line;
-	my $meaning;
-	my $tag;
-	if (defined($ar[1])){
-	    if ($ar[1] =~ /^.*@/){ #skip lines with @ (lax rows)
-		next;
-	    }
-	    $tag = shift @ar;
-	    $meaning = shift @ar;
-	}else{
-	    next;
-	}
-	my $counter = 0;
-	print OUT $meaning,"\t";
-	foreach my $entry (@ar){
-	    if (substr($entry,0,3) eq '...'){
-		print OUT '...';
-	    }else{
-		my $wordsref = parseWords($entry);
-		my $err = $wordsref->{'err'};
-		my @words = @{$wordsref->{'words'}};
-		if ($err == 1){
-		    print "Odd number of delimiters ",$meaning,": $words[0]\n";
-		    next;
-		}
-		foreach my $w (@words){
-		    $w = NFD($w); #decompose & reorder canonically
-		    my $language = ${$langref}[$counter];
-		    if (!defined($hashref->{$language.'.'.$w})){
-			print "inconsistency at: $language $w\n";
-			# use Data::Dumper;
-			# print Dumper $hashref;
-			# die;
-		    }else{
-			if($includeWords == 1){
-			    print OUT $w,';',join(';',@{$hashref->{$language.'.'.$w}});
-			}elsif($includeWords == 0){
-			    print OUT join(';',@{$hashref->{$language.'.'.$w}});
-			}else{
-			    die;
-			}
-		    }
-		    print OUT ';';
-		}
-	    }
-	    print OUT "\t";
-	    $counter++;
-	}
+      next;
     }
-    $lineCounter++;
-    print OUT "\n";
+    my $tag = shift @ar;
+    my $meaning = shift @ar; 
+    my $counter = 0;
+    print OUT $meaning,"\t";
+    foreach my $entry (@ar){
+      if (substr($entry,0,3) eq '...'){
+	print OUT '...';
+      }else{
+	my $wordsref = parseWords($entry);
+	my $err = $wordsref->{'err'};
+	my @words = @{$wordsref->{'words'}};
+	if ($err == 1){
+	  print "Odd number of delimiters ",$meaning,": $words[0]\n";
+	  next;
+	}
+	foreach my $w (@words){
+	  $w = NFD($w); #decompose & reorder canonically
+	  my $language = ${$langref}[$counter];
+
+	  # if ($meaning eq 'five'){
+	  #   print $language, $w,"\n";
+	  #   print Dumper @{$hashref->{$language.'.'.$w}};
+	  # #  die;
+	  # }
+	  
+	  if (!defined($hashref->{$language.'.'.$w})){
+	    print "inconsistency at: $language $meaning, $w\n";
+	  }else{
+	    #loop through to find which are compounds and which match with meaning
+	    my @foundCompound;
+	    my @matches;
+	    my $counterComp = 0;
+	    foreach my $cognGroup (@{$hashref->{$language.'.'.$w}}){
+	      my $root = ${$cognGroup}[0];
+	      my $header = ${$cognGroup}[1];
+	      my $tagsRef = ${$cognGroup}[2];
+	      if(defined($tagsRef->{'COMPOUND'})){
+		push @foundCompound, $counterComp;
+	      }
+	      if($header eq $meaning){
+		push @matches, $counterComp;
+	      }
+	      $counterComp++;
+	    }
+	    if($#foundCompound==0){ 	    # if one is compound
+	      if($#{$hashref->{$language.'.'.$w}}==0){ # if it belongs to only one cognate set
+		print OUT &printCell(\@{$hashref->{$language.'.'.$w}},$w,$includeWords);
+	      }else{ # more than one cognate sets
+		if($#matches == 0){
+		  if ($foundCompound[0] eq $matches[0]){ # if header of compound is same with meaning and all other are different
+		    print OUT $w.';'.${$hashref->{$language.'.'.$w}}[$foundCompound[0]][0];
+		  }else{ # if one header is the same with meaning but it is not compound
+		    print Dumper @{$hashref->{$language.'.'.$w}};
+		    die "one header is the same with meaning but it is not compound";
+		    # warning
+		  }
+		}elsif($#matches==1){ # two total matches
+		  foreach my $m (@matches){
+		    if($foundCompound[0] eq $m){
+		      #do nothing
+		    }else{ 		      #print other (not compound)
+		      print OUT "TWO MATCHES";
+		      print OUT ${$hashref->{$language.'.'.$w}}[$m];
+		    }
+		  }
+		}else{ # more than two matches
+		  print Dumper @{$hashref->{$language.'.'.$w}};
+		  die "more than two matches";
+		  # warning
+		}
+	      }
+	    }elsif($#foundCompound>1){ # more than one compound
+	      print Dumper @{$hashref->{$language.'.'.$w}};
+	      die "more than one compounds";
+	    }else{  # no compounds
+	      print OUT &printCell(\@{$hashref->{$language.'.'.$w}},$w,$includeWords);
+	    }
+	  }
+	}
+      }
+      print OUT "\t";
+      $counter++;
+    }
+  }
+  $lineCounter++;
+  print OUT "\n";
 }
 close $cgfh;
 close $cpfh;
+  
+sub printCell{
+  # formats a string for printing from data structure
+  # &printCell(ds,word,printWord) if printWord = TRUE also prints word
+  my $dsRef = shift @_;
+  my $word = shift @_;
+  my $printWord = shift @_;
+  my $ind = 0;
+  my $med = 0;
+  my $returnValue;
+  #print Dumper $dsRef;
+  for( my $i=0; $i<= $#{$dsRef};$i++){
+    if(defined(${$dsRef}[$i][2]->{'IND'})){
+      $ind = 1;
+    }
+    if(defined(${$dsRef}[$i][2]->{'MED'})){
+      $med = 1;
+    }
+    if($printWord == 1){
+      $returnValue .= $word.';'.${$dsRef}[$i][0].($ind?'.IND':'').($med?'.MED':'').';';
+    }else{
+      $returnValue .= ${$dsRef}[$i][0].($ind?'.IND':'').($med?'.MED':'').';';
+    }
+  }
+  return $returnValue;
+}
 
 sub parseCognates{
     my $cgfh = shift @_;
@@ -140,7 +201,7 @@ sub parseCognates{
 	}
 	if($lineCounter == 0){ #languages (header)
 	    push @languages, @ar;
-	    shift @languages; #remove English
+#	    shift @languages; # Do not remove English
 	}else{
             #filter Xs
 	    if(!defined($ar[0])){
@@ -184,39 +245,40 @@ sub parseCognates{
 }
 
 sub parseWords{
-    my $string = shift @_;
-    my $inWord = 0;
-    my $wordCount = 0;
-    my @words;
-    my $openDelim;
-    for(my $i = 0; $i < length($string); $i++){
-	my $char = substr($string,$i,1);
-	next if $char eq '$';
-	if ($inWord == 0){ #outside word
-	    if($char eq '<' or $char eq '[' or $char eq '/'){
-		#in word
-		$inWord = 1;
-		$words[$wordCount].=$char; #delimiters are part of the word
-		$openDelim=$char;
-	    }
-	}else{ #inside word
-	    if($char eq '>' or $char eq ']' or $char eq '/'){
-		$inWord = 0;
-		$words[$wordCount].=$char;
-		$wordCount++;
-	    }else{
-		$words[$wordCount].=$char;
-	    }
-
-	}
+  my $string = shift @_;
+  my $inWord = 0;
+  my $wordCount = 0;
+  my @words;
+  my $openDelim;
+  for(my $i = 0; $i < length($string); $i++){
+    my $char = substr($string,$i,1);
+    next if $char eq '$';
+    if ($inWord == 0){ #outside word
+      if($char eq '<' or $char eq '[' or $char eq '/'){
+	#in word
+	$inWord = 1;
+	$words[$wordCount].=$char; #delimiters are part of the word
+	$openDelim=$char;
+      }
+    }else{ #inside word
+      if($char eq '>' or $char eq ']' or $char eq '/'){
+	$inWord = 0;
+	$words[$wordCount].=$char;
+	$wordCount++;
+      }else{
+	$words[$wordCount].=$char;
+      }
+      
     }
-    my $errors = -1;
-    if ($inWord == 1){
-#	print "Odd number of delimiters!, I don't know how to parse words, At: $string\n    "; 
-	$errors = 1;
-	$words[0]=$string;
-    }
-    my $returnValue = {'words' => \@words,
-		       'err'   => $errors};
-    return $returnValue;
+  }
+  my $errors = -1;
+  if ($inWord == 1){
+    #	print "Odd number of delimiters!, I don't know how to parse words, At: $string\n    "; 
+    $errors = 1;
+    $words[0]=$string;
+  }
+  my $returnValue = {'words' => \@words,
+		     'err'   => $errors};
+  return $returnValue;
 }
+
