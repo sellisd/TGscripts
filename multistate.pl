@@ -85,16 +85,39 @@ while(my $line = readline($cpfh)){
 	foreach my $w (@words){
 	  $w = NFD($w); #decompose & reorder canonically
 	  my $language = ${$langref}[$counter];
-
-	  # if ($meaning eq 'five'){
-	  #   print $language, $w,"\n";
-	  #   print Dumper @{$hashref->{$language.'.'.$w}};
-	  # #  die;
-	  # }
-	  
 	  if (!defined($hashref->{$language.'.'.$w})){
 	    print "inconsistency at: $language $meaning, $w\n";
 	  }else{
+# new pseudocode
+# foundCompound
+# Foreach root (counter)
+#      if tag{compound} or tag{complex}
+#         push foundCompound, counter
+#     if header == meaning
+#         push matches, counter
+
+# IF foundCompound == 0
+# IF all roots are the same
+# print
+# ELSE
+#     print quelqun foss a le fava 
+# IF foundCompound > 1
+#      print warning (choose manually) and continue
+# IF foundCompound == 1
+#     IF it belongs to only one cognate set
+#         print cognate set (with IND or MED if present)
+#     IF it belongs to more than one cognate sets,
+#         IF headerOfCompound == meaning
+#             IF (headersOthers == meaning) == 0
+# print compound [ind/med]
+# IF (headOther == meaning) ==1 (one other)
+# replace the form with the constituent compound set name (other)
+# IF (headersOthers == meaning) >1
+# warning and go to the next form/cell
+#         ELSE (IF headerOfCompound != meaning)
+#             warning and go to next
+
+
 	    #loop through to find which are compounds and which match with meaning
 	    my @foundCompound;
 	    my @matches;
