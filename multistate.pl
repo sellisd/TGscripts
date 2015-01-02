@@ -238,7 +238,7 @@ sub parseCognates{
 	    if($root ne uc($root)){
               #first column;
 	      $rootHeader = $root;
-	      next
+	      next;
 	    }
 	    foreach my $entry (@ar){
 		my $wordsref = parseWords($entry);
@@ -246,6 +246,7 @@ sub parseCognates{
 		my @words = @{$wordsref->{'words'}};
 		if ($err == 1){
 		    print "Odd number of delimiters ", $root,": $words[0]\n";
+		    $counter++;
 		    next;
 		}else{
 		    foreach my $w (@words){
