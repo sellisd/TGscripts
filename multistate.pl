@@ -153,8 +153,6 @@ while(my $line = readline($cpfh)){
 		      foreach my $m (@matches){
 			  if ($m != $foundCompound[0]){
 			      print OUT ${$hashref->{$language.'.'.$w}}[$m][0];               #         PRINT other
-			      print OUT (defined($ind)?'.IND':'');
-			      print OUT (defined($med)?'.MED':'');
 			      last;
 			  }
 		      }

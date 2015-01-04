@@ -5,7 +5,7 @@ use Encode;
 use Unicode::Normalize;
 binmode(STDOUT, ":utf8");
 
-my $multistateFile = '../data/multistate.13.09.19.csv';
+my $multistateFile = '../data/multistate.csv';
 open IN, '<:encoding(UTF-8)',$multistateFile or die $!;
 #open OUT, '>:encoding(UTF-8)', $outputFile or die $!;
 
