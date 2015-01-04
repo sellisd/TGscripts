@@ -1,7 +1,5 @@
----
-title: "TG analysis"
-output: html_document
----
+# TG analysis
+
 ## Preprocess data
 The first step is to reformat the data from google docs to tab delimited files in order to perform the analysis. To do so:
 
