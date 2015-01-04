@@ -61,6 +61,10 @@ while(my $line = <CP>){
 	    #skip lines with @ (lax rows)
 	}else{
 	    my $meaning = shift @ar;
+	    if ($#ar != $#languages){
+		print OUT "Warning: Entries are less than languages at $meaning. First or last entry is empty?\n";
+	    }
+
 	    my $counter = 0;
 	    foreach my $entry (@ar){
 		if ($entry=~ /^[\s\f\t]*$/){
