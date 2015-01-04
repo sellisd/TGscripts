@@ -69,10 +69,7 @@ while(my $line = <CP>){
 	    foreach my $entry (@ar){
 		if ($entry=~ /^[\s\f\t]*$/){
 		    print OUT "Empty entry at: $meaning - $languages[$counter]\n";
-		    $counter++;
-		    next;
-		}
-		if($entry eq '...'){
+		}elsif($entry eq '...'){
 		    if (!defined( $hash{$languages[$counter].'.'.$meaning} )){
 			print OUT "Not consistent names of meanings, run meaningConsistencyTest.pl: $meaning $languages[$counter]\n";
 		    }else{

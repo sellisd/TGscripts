@@ -160,7 +160,6 @@ while(my $line = <CP>){
 				print OUT $w,':',"@{$hash{$languages[$counter].'.'.$w}},";
                                 #remove entry fom missing
 				delete $missing{$languages[$counter].'.'.$w};
-
 			    }else{
 				print OUT $w,"NOT FOUND";
 			    }
