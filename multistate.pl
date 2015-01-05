@@ -6,13 +6,12 @@ use feature 'unicode_strings';
 use Getopt::Long;
 use Unicode::Normalize;
 use Data::Dumper;
+
 binmode(STDOUT, ":utf8");
 #read output from convert (-check nf format)
 #and produce a multistate coding table with words and roots
-#if option -words is set then in the output file the words
-#are also included e.g  <word>ROOT1 instead of ROOT in each entry
 
-my $Version = 0.1.1;
+my $Version = 0.1.2;
 my $usage = <<HERE;
 multistate version $Version
     Parses cognate and comparative files and produces a multistate coding table
@@ -48,7 +47,6 @@ open OUT, '>:encoding(UTF-8)',$outputFile or die $!;
 my $hashref;
 my $langref;
 ($hashref,$langref)=parseCognates($cgfh);
-
 my $lineCounter = 0;
 while(my $line = readline($cpfh)){
     chomp $line;
@@ -56,7 +54,6 @@ while(my $line = readline($cpfh)){
 	my @ar = split "\t", $line;
 	shift @ar; #remove TAG header
 	print OUT join("\t",@ar),"\n"; #includes English
-	#        print join("\n",@ar),"\n"; #includes English
     }else{
 	my @ar = split '\t', $line;
 	if (defined($ar[1])){
@@ -77,8 +74,8 @@ while(my $line = readline($cpfh)){
 		my $wordsref = parseWords($entry);
 		my $err = $wordsref->{'err'};
 		my @words = @{$wordsref->{'words'}};
-		if ($err == 1){
-		    print "Odd number of delimiters ",$meaning,": $words[0]\n";
+		if (defined($err)){
+		    print $err, ' at ', $meaning,"\n";
 		    next;
 		}
 		foreach my $w (@words){
@@ -108,7 +105,6 @@ while(my $line = readline($cpfh)){
 			}
 			#pool is the datastructure entry for one language.word (dereferenced value of hash)
 			my @pool = @{$hashref->{$language.'.'.$w}}; #copy for shorthand reference
-			
 			if($#matches==0){                                                         # IF match == 1
 			    print OUT $pool[$matches[0]][0];                                 #   PRINT
 			    my $tagref = $pool[$matches[0]][2];			         
@@ -200,11 +196,12 @@ sub parseCognates{
 		next;
 	    }
 	    foreach my $entry (@ar){
+		next if $entry =~ /^[\s\f\t]*$/; # skip emty entries
 		my $wordsref = parseWords($entry);
 		my $err = $wordsref->{'err'};
 		my @words = @{$wordsref->{'words'}};
-		if ($err == 1){
-		    print "Odd number of delimiters ", $root,": $words[0]\n";
+		if (defined($err)){
+		    print  $err, ' at ',$root,"\n";
 		    $counter++;
 		    next;
 		}else{
@@ -213,7 +210,7 @@ sub parseCognates{
 			if(!defined($languages[$counter])){
 			    die;
 			}
-			my $value = [$root, $rootHeader, \%tags];
+			my $value = [$root, $rootHeader, (%tags ? \%tags : {} ) ];
 			if(defined($hash{$languages[$counter].".".$w})){
 			    push @{$hash{$languages[$counter].".".$w}},$value;
 			}else{
@@ -235,33 +232,51 @@ sub parseWords{
     my $wordCount = 0;
     my @words;
     my $openDelim;
+    my $inParentheses = 0; #ignore everything in parentheses (unless it is within word)
+    my $errors;
     for(my $i = 0; $i < length($string); $i++){
 	my $char = substr($string,$i,1);
 	next if $char eq '$';
 	if ($inWord == 0){ #outside word
-	    if($char eq '<' or $char eq '[' or $char eq '/'){
-		#in word
-		$inWord = 1;
-		$words[$wordCount].=$char; #delimiters are part of the word
-		$openDelim=$char;
+	    if($char eq '('){ #in parentheses
+		$inParentheses = 1;
+	    }elsif($char eq ')'){
+		$inParentheses = 0;
+	    }
+	    if($inParentheses == 0){
+		if($char eq '<' or $char eq '[' or $char eq '/'){
+		    #in word
+		    $inWord = 1;
+		    $words[$wordCount].=$char; #delimiters are part of the word
+		    $openDelim=$char;
+		}
 	    }
 	}else{ #inside word
 	    if($char eq '>' or $char eq ']' or $char eq '/'){
 		$inWord = 0;
 		$words[$wordCount].=$char;
 		$wordCount++;
+		if($char eq '>' and $openDelim eq '<'){
+		}elsif($char eq ']' and $openDelim eq '['){
+		}elsif($char eq '/' and $openDelim eq '/'){
+		}else{
+		    $errors = "Error parsing: $string";
+		}
 	    }else{
 		$words[$wordCount].=$char;
 	    }
 	    
 	}
     }
-    my $errors = -1;
     if ($inWord == 1){
-	#	print "Odd number of delimiters!, I don't know how to parse words, At: $string\n    "; 
-	$errors = 1;
-	$words[0]=$string;
+	$errors = "Error parsing: $string";
     }
+    my %uniqH;
+    foreach my $w (@words){
+	$w = NFD($w); #decompose & reorder canonically
+	$uniqH{$w} = 1;
+    }
+    @words = keys %uniqH;
     my $returnValue = {'words' => \@words,
 		       'err'   => $errors};
     return $returnValue;
