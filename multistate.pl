@@ -106,7 +106,7 @@ while(my $line = readline($cpfh)){
 			#pool is the datastructure entry for one language.word (dereferenced value of hash)
 			my @pool = @{$hashref->{$language.'.'.$w}}; #copy for shorthand reference
 			if($#matches==0){                                                         # IF match == 1
-			    print OUT $pool[$matches[0]][0];                                 #   PRINT
+			    print OUT $pool[$matches[0]][0];                                      #   PRINT
 			    my $tagref = $pool[$matches[0]][2];			         
 			    if (defined($tagref->{'IND'})){                                       #   IF IND
 				print OUT '.IND';                                                 #     PRINT IND
@@ -175,7 +175,7 @@ sub parseCognates{
 	my @ar = split "\t", $line;
 	my $compound = shift @ar; #remove compound column for the rest of analysis
 	my @tags = split /,\s*/, $compound; #split first entry to tags
-	my %tags = ();
+	my %tags;
 	foreach my $tag (@tags){
 	    $tags{$tag}=1;
 	}
@@ -196,7 +196,10 @@ sub parseCognates{
 		next;
 	    }
 	    foreach my $entry (@ar){
-		next if $entry =~ /^[\s\f\t]*$/; # skip emty entries
+		if ($entry =~ /^[\s\f\t]*$/){ # skip emty entries
+		    $counter++;
+		    next;
+		}
 		my $wordsref = parseWords($entry);
 		my $err = $wordsref->{'err'};
 		my @words = @{$wordsref->{'words'}};
@@ -232,24 +235,16 @@ sub parseWords{
     my $wordCount = 0;
     my @words;
     my $openDelim;
-    my $inParentheses = 0; #ignore everything in parentheses (unless it is within word)
     my $errors;
     for(my $i = 0; $i < length($string); $i++){
 	my $char = substr($string,$i,1);
 	next if $char eq '$';
 	if ($inWord == 0){ #outside word
-	    if($char eq '('){ #in parentheses
-		$inParentheses = 1;
-	    }elsif($char eq ')'){
-		$inParentheses = 0;
-	    }
-	    if($inParentheses == 0){
-		if($char eq '<' or $char eq '[' or $char eq '/'){
-		    #in word
-		    $inWord = 1;
-		    $words[$wordCount].=$char; #delimiters are part of the word
-		    $openDelim=$char;
-		}
+	    if($char eq '<' or $char eq '[' or $char eq '/'){
+		#in word
+		$inWord = 1;
+		$words[$wordCount].=$char; #delimiters are part of the word
+		$openDelim=$char;
 	    }
 	}else{ #inside word
 	    if($char eq '>' or $char eq ']' or $char eq '/'){
