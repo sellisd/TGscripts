@@ -12,7 +12,7 @@ binmode(STDOUT, ":utf8");
 #if option -words is set then in the output file the words
 #are also included e.g  <word>ROOT1 instead of ROOT in each entry
 
-my $Version = 0.02;
+my $Version = 0.1.1;
 my $usage = <<HERE;
 multistate version $Version
     Parses cognate and comparative files and produces a multistate coding table
@@ -48,7 +48,7 @@ open OUT, '>:encoding(UTF-8)',$outputFile or die $!;
 my $hashref;
 my $langref;
 ($hashref,$langref)=parseCognates($cgfh);
-#print Dumper $hashref;
+
 my $lineCounter = 0;
 while(my $line = readline($cpfh)){
     chomp $line;
@@ -71,10 +71,6 @@ while(my $line = readline($cpfh)){
 	my $counter = 0;
 	print OUT $meaning,"\t";
 	foreach my $entry (@ar){
-	    #print ${$langref}[$counter],"\t";
-	    # $counter++;
-	    #  print "  ",$entry,"\n";
-	    # next;
 	    if (substr($entry,0,3) eq '...'){
 		print OUT '...';
 	    }else{
@@ -92,97 +88,69 @@ while(my $line = readline($cpfh)){
 			print "inconsistency at: $language $meaning, $w\n";
 		    }else{
 			#loop through to find which are compounds and which match with meaning
-			my @foundCompound;
 			my @matches;
+			my @matchesNotCompound;
 			my %roots;
-			my $ind;
-			my $med;
 			my $counterComp = 0;
 			foreach my $cognGroup (@{$hashref->{$language.'.'.$w}}){
 			    my $root = ${$cognGroup}[0];
 			    my $header = ${$cognGroup}[1];
-			    #	      if ($header eq 'toe'){print Dumper $hashref->{$language.'.'.$w}; print $w,' ',$language,"\n";}
 			    my $tagsRef = ${$cognGroup}[2];
-			    if(defined($tagsRef->{'COMPOUND'}) or defined($tagsRef->{'COMPLEX'})){
-				push @foundCompound, $counterComp;
-			    }
-			    if(defined($tagsRef->{'IND'})){
-				$ind = $counterComp;
-			    }
-			    if(defined($tagsRef->{'MED'})){
-				$med = $counterComp;
-			    }
 			    if($header eq $meaning){
 				push @matches, $counterComp;
+				if(defined($tagsRef->{'COMPOUND'}) or defined($tagsRef->{'COMPLEX'})){
+				}else{
+				    push @matchesNotCompound, $counterComp;
+				}
 			    }
 			    $roots{$root} = 1;
 			    $counterComp++;
 			}
-			my $rootNo = keys %roots;
-			if  (! @foundCompound){                                                               # IF no compounds
-			    if($rootNo == 1){                                                                 #   IF all roots are the same
-				print OUT $hashref->{$language.'.'.$w}[0][0];                                 #     PRINT the first or only one
-			    }else{                                                                            #   ELSE
-				if (@matches){                                                                #     IF matches
-				    if($#matches==0){                                                         #       IF one maches
-					print OUT ${$hashref->{$language.'.'.$w}}[$matches[0]][0];            #         PRINT
-				    }else{                                                                    #       ELSE
-					print OUT "Warning (Multiple roots with matching meaning:";           #         WARNING
-					foreach my $warnings (@{$hashref->{$language.'.'.$w}}){
-					    print OUT ${$warnings}[0],' ';
-					}
-					print OUT ')';
-				    }
-				}else{                                                                        #     ELSE
-				    print OUT "Warning (Multiple roots, but no matches to meaning)";          #       WARNING
-				    foreach my $warnings (@{$hashref->{$language.'.'.$w}}){
-					print OUT ${$warnings}[0],' ';
-				    }
-				    print OUT ')';
+			#pool is the datastructure entry for one language.word (dereferenced value of hash)
+			my @pool = @{$hashref->{$language.'.'.$w}}; #copy for shorthand reference
+			
+			if($#matches==0){                                                         # IF match == 1
+			    print OUT $pool[$matches[0]][0];                                 #   PRINT
+			    my $tagref = $pool[$matches[0]][2];			         
+			    if (defined($tagref->{'IND'})){                                       #   IF IND
+				print OUT '.IND';                                                 #     PRINT IND
+			    }								         
+			    if(defined($tagref->{'MED'})){                                        #   IF MED
+				print OUT '.MED';                                                 #     PRINT MED
+			    }								         
+			}elsif(! @matches){                                 	                  # ELSE IF match == 0
+			    my @rootsA = keys %roots;					         
+			    if($#rootsA == 0){			                                  # IF only one root or only identical roots
+				print OUT $rootsA[0];                                             #   PRINT
+				my $tagref = $pool[0][2];				         
+				if (defined($tagref->{'IND'})){                                   #   IF IND
+				    print OUT '.IND';                                             #     PRINT IND
+				}							         
+				if(defined($tagref->{'MED'})){                                    #   IF MED
+				    print OUT '.MED';                                             #     PRINT MED
+				}							         
+			    }else{                                                                # ELSE
+				print OUT 'Warning: No cognate set matches meaning (';            #   WARNING
+				foreach my $warnings (@pool){			         
+				    print OUT $warnings->[0],' ';				         
+				}							         
+				print OUT ')';						         
+			    }								         
+			}elsif($#matches > 0){                                                    # ELSE IF match> 1
+			    if(!@matchesNotCompound){                                             #   IF all matches are compound
+				print OUT 'Warning: All matches are compound (';                  #     WARNING
+				foreach my $warnings (@pool){
+				    print OUT $warnings->[0],' ';
 				}
-			    }							                          
-			}elsif($#foundCompound>0){                                                            # ELSE IF more than one compounds
-			    print OUT "Warning (> 2 compounds: ";                                             #   WARNING
-			    foreach my $warnings (@{$hashref->{$language.'.'.$w}}){
-				print OUT ${$warnings}[0],' ';
-			    }
-			    print OUT ')';
-			    #print OUT Dumper($hashref->{$language.'.'.$w});	                          
-			    #	      print OUT "Il y a une couille dans le potage\n";	                          
-			}elsif($#foundCompound == 0){                                                         # ELSE IF one compound
-			    my $cognateSetNo = $#{$hashref->{$language.'.'.$w}}; 
-			    if($cognateSetNo == 0){                                                           #   IF it belongs to only one cognate set
-				print OUT ${$hashref->{$language.'.'.$w}}[0][0];                              #     PRINT
-				print OUT (defined($ind)?'.IND':'');
-				print OUT (defined($med)?'.MED':'');		    
-			    }elsif($cognateSetNo >0){                                                         #   ELSE IF it belongs to multiple cognate sets
-				if(${$hashref->{$language.'.'.$w}}[$foundCompound[0]][1] eq $meaning){        #     IF headerOfCompound == meaning
-				    if($#matches==0){                                                         #       IF only one match
-					print OUT ${$hashref->{$language.'.'.$w}}[$foundCompound[0]][0];      #         PRINT COMPOUND 
-					print OUT (defined($ind)?'.IND':'');				       
-					print OUT (defined($med)?'.MED':'');				       
-				    }elsif($#matches==1){                                                     #       ELSE IF two matches
-					foreach my $m (@matches){					       
-					    if ($m != $foundCompound[0]){				       
-						print OUT ${$hashref->{$language.'.'.$w}}[$m][0];             #         PRINT other
-						last;							       
-					    }								       
-					}								       
-				    }elsif($#matches>1){                                                      #       ELSE IF more than two matches
-					print OUT "Warning - More than two headers match meaning: "           #         WARNING
-					    #print OUT Dumper($hashref->{$language.'.'.$w});		       
-				    }									       
-				}else{                                                                        #    ELSE
-				    if(!@matches){                                                            #      IF no match
-					print OUT ${$hashref->{$language.'.'.$w}}[$foundCompound[0]][0];      #         PRINT COMPOUND
-					print OUT (defined($ind)?'.IND':'');				       
-					print OUT (defined($med)?'.MED':'');				       
-				    }else{                                                                    #      ELSE
-					print OUT "Warning ( No header matches meaning: ";                    #      WARNING
-					print OUT ${$hashref->{$language.'.'.$w}}[$foundCompound[0]][1],')';
-					#print OUT Dumper($hashref->{$language.'.'.$w});die;
-				    }
+				print OUT ')';
+			    }elsif($#matchesNotCompound == 0){                                    #   ELSE IF one match is not compound
+				print OUT $pool[$matchesNotCompound[0]][0];                       #     PRINT
+			    }elsif($#matchesNotCompound > 0){                                     #   ELSE IF more than one matches are not compound
+				print OUT 'Warning: More than one cognate set matches meaning ('; #     WARNING
+				foreach my $warnings (@pool){
+				    print OUT $warnings->[0],' ';
 				}
+				print OUT ')';
 			    }
 			}
 			print OUT ';';
@@ -198,31 +166,6 @@ while(my $line = readline($cpfh)){
 }
 close $cgfh;
 close $cpfh;
-
-sub printCell{
-    # formats a string for printing from data structure
-    # &printCell(ds,word,printWord) if printWord = TRUE also prints word
-    my $dsRef = shift @_;
-    my $word = shift @_;
-    my $printWord = shift @_;
-    my $ind = 0;
-    my $med = 0;
-    my $returnValue;
-    for( my $i=0; $i<= $#{$dsRef};$i++){
-	if(defined(${$dsRef}[$i][2]->{'IND'})){
-	    $ind = 1;
-	}
-	if(defined(${$dsRef}[$i][2]->{'MED'})){
-	    $med = 1;
-	}
-	if($printWord == 1){
-	    $returnValue .= $word.';'.${$dsRef}[$i][0].($ind?'.IND':'').($med?'.MED':'').';';
-	}else{
-	    $returnValue .= ${$dsRef}[$i][0].($ind?'.IND':'').($med?'.MED':'').';';
-	}
-    }
-    return $returnValue;
-}
 
 sub parseCognates{
     my $cgfh = shift @_;
