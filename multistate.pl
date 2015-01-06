@@ -89,13 +89,18 @@ while(my $line = readline($cpfh)){
 			my @matchesNotCompound;
 			my %roots;
 			my $counterComp = 0;
+			my @compounds;
 			foreach my $cognGroup (@{$hashref->{$language.'.'.$w}}){
 			    my $root = ${$cognGroup}[0];
 			    my $header = ${$cognGroup}[1];
-			    my $tagsRef = ${$cognGroup}[2];
+			    my $indmed = ${$cognGroup}[2];
+			    my $isComp = ${$cognGroup}[3];
+			    if($isComp==1){
+				push @compounds, $counterComp; #compound
+			    }
 			    if($header eq $meaning){
 				push @matches, $counterComp;
-				if(defined($tagsRef->{'COMPOUND'}) or defined($tagsRef->{'COMPLEX'})){
+				if($isComp==1){ #matching compound
 				}else{
 				    push @matchesNotCompound, $counterComp;
 				}
@@ -105,32 +110,43 @@ while(my $line = readline($cpfh)){
 			}
 			#pool is the datastructure entry for one language.word (dereferenced value of hash)
 			my @pool = @{$hashref->{$language.'.'.$w}}; #copy for shorthand reference
+
+#			print $counter,' ',$language,' ', $meaning,"\n";
+#			if ($counter == 12 and $meaning eq 'eye'){
+#			    print $language,' ',$meaning;
+#			    print Dumper @pool;
+#			    print @compounds,' - ',@matches,' -',@matchesNotCompound;
+#			    die;
+#			}
+
 			if($#matches==0){                                                         # IF match == 1
 			    print OUT $pool[$matches[0]][0];                                      #   PRINT
-			    my $tagref = $pool[$matches[0]][2];			         
-			    if (defined($tagref->{'IND'})){                                       #   IF IND
-				print OUT '.IND';                                                 #     PRINT IND
-			    }								         
-			    if(defined($tagref->{'MED'})){                                        #   IF MED
-				print OUT '.MED';                                                 #     PRINT MED
-			    }								         
+			    my $indmed = $pool[$matches[0]][2];			         
+			    if (defined($indmed)){                                                #   IF IND/MED
+				print OUT '.'.$indmed;                                            #     PRINT IND/MED
+			    }
 			}elsif(! @matches){                                 	                  # ELSE IF match == 0
 			    my @rootsA = keys %roots;					         
 			    if($#rootsA == 0){			                                  # IF only one root or only identical roots
 				print OUT $rootsA[0];                                             #   PRINT
-				my $tagref = $pool[0][2];				         
-				if (defined($tagref->{'IND'})){                                   #   IF IND
-				    print OUT '.IND';                                             #     PRINT IND
-				}							         
-				if(defined($tagref->{'MED'})){                                    #   IF MED
-				    print OUT '.MED';                                             #     PRINT MED
-				}							         
+				my $indmed = $pool[0][2];				         
+				if (defined($indmed)){                                            #   IF IND/MED
+				    print OUT '.'.$indmed;                                        #     PRINT IND/MED
+				}
 			    }else{                                                                # ELSE
-				print OUT 'Warning: No cognate set matches meaning (';            #   WARNING
-				foreach my $warnings (@pool){			         
-				    print OUT $warnings->[0],' ';				         
-				}							         
-				print OUT ')';						         
+				if($#compounds==0){                                               #   IF compounds==1
+				    print OUT $pool[$compounds[0]][0];                            #     PRINT (with MED/IND)
+				    my $indmed = $pool[$compounds[0]][2];				         
+				    if (defined($indmed)){                                        #   IF IND/MED
+					print OUT '.'.$indmed;                                    #     PRINT IND/MED
+				    }
+				}else{                                                            #   ELSE
+				    print OUT 'Warning: No cognate set matches meaning (';        #   WARNING
+				    foreach my $warnings (@pool){			         
+					print OUT $warnings->[0],' ';
+				    }
+				    print OUT ')';			
+				}			         
 			    }								         
 			}elsif($#matches > 0){                                                    # ELSE IF match> 1
 			    if(!@matchesNotCompound){                                             #   IF all matches are compound
@@ -176,8 +192,17 @@ sub parseCognates{
 	my $compound = shift @ar; #remove compound column for the rest of analysis
 	my @tags = split /,\s*/, $compound; #split first entry to tags
 	my %tags;
+	my $isComp = 0;
+	my $indmed;
 	foreach my $tag (@tags){
-	    $tags{$tag}=1;
+	    if ($tag eq 'COMPOUND' or $tag eq 'COMPLEX'){
+		$isComp = 1;
+	    }
+	    if($tag eq 'IND'){
+		$indmed = 'IND';
+	    }elsif($tag eq 'MED'){
+		$indmed = 'MED';
+	    }
 	}
 	if($lineCounter == 0){ #languages (header)
 	    push @languages, @ar;
@@ -190,6 +215,7 @@ sub parseCognates{
 	    # next if $ar[0] =~ /^.*X$/;
 	    my $counter = 0;
 	    my $root = shift @ar;
+	    $root =~ s/^\s*(\S+)\s*$/$1/;
 	    if($root ne uc($root)){
 		#first column;
 		$rootHeader = $root;
@@ -213,7 +239,7 @@ sub parseCognates{
 			if(!defined($languages[$counter])){
 			    die;
 			}
-			my $value = [$root, $rootHeader, (%tags ? \%tags : {} ) ];
+			my $value = [$root, $rootHeader, $indmed, $isComp ];
 			if(defined($hash{$languages[$counter].".".$w})){
 			    push @{$hash{$languages[$counter].".".$w}},$value;
 			}else{
