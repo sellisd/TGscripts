@@ -24,7 +24,8 @@ which should not produce any errors
 
 ## GA coding (Grey & Attkinson: multistate + binary recoding)
 
-`./recode.pl '../data/GA multistate output MASTER.csv' > ../data/recodedMatrix.csv` recode multistate to binary recoded matrix. Each IND and MED are considered independent characters.
+`./recode.pl '../data/GA multistate output MASTER.csv' > ../data/recodedMatrix.csv` recode multistate to binary recoded matrix.
+IND and MED are ignored!
 
 ## NZLKE Multistate coding (true miultistate coding)
 1. `multistate.pl` (replaced `multi2binary.pl`)

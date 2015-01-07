@@ -34,6 +34,9 @@ while(my $line = <IN>){     #read file line by line
 	    }
 	}
 	foreach my $binstate (sort keys %hash){
+	    if(substr($binstate,-4,4) eq '.IND' or substr($binstate,-4,4) eq '.MED'){
+		next;
+	    }
 	    print $meaning.'.'.$binstate,"\t";
 	    foreach my $cell (@ar){
 		my @states = split ';', $cell;
