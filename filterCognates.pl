@@ -5,7 +5,7 @@ use Encode;
 use feature 'unicode_strings';
 use Unicode::Normalize;
 binmode(STDOUT, ":utf8");
-my $input = '../data/TG_cognates_online_MASTER.csv';
+my $input = $ARGV[0];#'../data/TG_cognates_online_MASTER.csv';
 my @filterTags = qw/IND MED/;
 my $output = $input;
 my $suffix = join '.',@filterTags;

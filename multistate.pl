@@ -302,4 +302,3 @@ sub parseWords{
 		       'err'   => $errors};
     return $returnValue;
 }
-

@@ -7,7 +7,7 @@ use Unicode::Normalize;
 binmode(STDOUT, ":utf8");
 #read comparative file
 #for each column (language) find the percentage of cells that are three dots excluding lax rows (ending in @)
-my $comparativeFile = '../data/TG_comparative_online_MASTER.csv';
+my $comparativeFile = '../data/TG_comparative_lexical_online_MASTER.csv';
 open my $cpfh, '<:encoding(UTF-8)',$comparativeFile or die $!;
 my $header = readline($cpfh);
 chomp $header;
