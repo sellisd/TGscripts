@@ -42,9 +42,9 @@ reads the output file from `convert.pl` (with option `-check nf`) and produces a
 Reads output from `multistate.pl` and replaces roots with numbers and three dots (...) with question marks (?). For numbering it uses mesquite Numbering (0-9, A-H,K-N,P-Z,a-h,k-n,p-z)
 
 ## Binary coding
-./filterTag.pl -exclude FUNCT -comparative ../data/TG_comparative_lexical_online_MASTER.csv -cognate ../data/TG_cognates_online_MASTER.csv -output ../data/cognates.noFUNCT.csv
-./filterCognates.pl ../data/cognates.noFUNCT.csv
-./transpose.pl ../data/cognates.noFUNCT.no.IND.MED.csv ../data/cognates.noFUNCT.no.IND.MED.tr.csv
-./binaryCoding.pl ../data/cognates.noFUNCT.no.IND.MED.tr.csv ../data/cognates.noFUNCT.no.IND.MED.tr.bin.csv
+`./filterTag.pl -exclude FUNCT -comparative ../data/TG_comparative_lexical_online_MASTER.csv -cognate ../data/TG_cognates_online_MASTER.csv -output ../data/cognates.noFUNCT.csv`
+`./filterCognates.pl ../data/cognates.noFUNCT.csv`
+`./transpose.pl ../data/cognates.noFUNCT.no.IND.MED.csv ../data/cognates.noFUNCT.no.IND.MED.tr.csv`
+`./binaryCoding.pl ../data/cognates.noFUNCT.no.IND.MED.tr.csv ../data/cognates.noFUNCT.no.IND.MED.tr.bin.csv`
 if errors are produced, go back to the untransposed file and remove consecutive small
 open with mesquite
