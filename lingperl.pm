@@ -1,5 +1,6 @@
 # commonly used functions
 sub parseWords{
+	# parse words in entries of comparative or cognate files
     my $version = "1.0.0";
     my $string = shift @_;
     my $inWord = 0;
