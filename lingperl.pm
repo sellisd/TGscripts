@@ -48,4 +48,17 @@ sub parseWords{
 		       'err'   => $errors};
     return $returnValue;
 }
+
+sub makeChoice{
+	my $choicesHref = shift @_;
+	my $query = shift @_;
+	if (defined($choicesHref->{$query})){
+		return $choicesHref->{$query;}
+	}else{
+		return -1;
+	}
+# from a table of precompiled solutions find if the current warning has a solution. If yes return solution if not print warning
+# read table with
+
+}
 1;

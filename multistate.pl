@@ -20,6 +20,7 @@ multistate version $Version
     where OPTIONS can be one or more of the following:
     -comparative FILENAME  path and filename of comparative .csv file
     -cognate     FILENAME  path and filename of cognate .csv file
+    -choices     FILENAME  path and filename of table with manual choices
     -output      FILENAME  path and filename of output file
     -help or -?            this help screen
 HERE
@@ -27,18 +28,30 @@ HERE
 my $cognateFile = '../data/TG_cognates_online_MASTER.csv';
 my $comparativeFile = '../data/TG_comparative_lexical_online_MASTER.csv';
 my $outputFile = '../data/multistate.csv';
+my $choiceFile = '../data/choices.csv';
 my $includeWords = 0;
 my $help;
 unless(GetOptions( 
 	   'words'         => \$includeWords,
 	   'comparative=s' => \$comparativeFile,
 	   'cognate=s'     => \$cognateFile,
+	   'choices=s'     => \$choiceFile,
 	   'output=s'      => \$outputFile,
 	   'help|?'        => \$help
        )){die $usage;}
 if($help){
     die $usage;
 }
+my %choicesH; # hash filled with manually made choices 
+open my $choiceFH, '<:encoding(UTF-8)',$choiceFile or die $!;
+readline($choiceFH); # skip header
+while(my $line = readline($choiceFH)){
+	chomp $line;
+	(my $language, my $meaning, my $warning, my $decision) = split " ", $line;
+	my $key = $language.$meaning.$warning;
+	$choicesH{$key} = $decision;
+}
+close $choiceFH
 
 open my $cpfh, '<:encoding(UTF-8)',$comparativeFile or die $!;
 open my $cgfh, '<:encoding(UTF-8)',$cognateFile or die $!;
@@ -141,6 +154,7 @@ while(my $line = readline($cpfh)){
 					print OUT '.'.$indmed;                                    #     PRINT IND/MED
 				    }
 				}else{                                                            #   ELSE
+					#check if there is a precomputed solution
 				    print OUT 'Warning: No cognate set matches meaning (';        #   WARNING
 				    foreach my $warnings (@pool){			         
 					print OUT $warnings->[0],' ';

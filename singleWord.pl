@@ -14,8 +14,8 @@ use Data::Dumper;
 # remove Guajajara 
 # save as .csv
 
-my $comparativeFile = '../data/TG_comparative_lexical_online_MASTER.csv';
-my $outputFile = '../data/comparativeSingeWord.csv';
+my $comparativeFile = '../data/TG_comparative.noFUNCTEXCL.csv';
+my $outputFile = '../data/comparativeSingleWord.csv';
 open my $cpfh, '<:encoding(UTF-8)',$comparativeFile or die $!;
 open OUT, '>:encoding(UTF-8)', $outputFile or die $!;
 my $lineCounter = 0;
