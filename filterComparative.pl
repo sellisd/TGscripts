@@ -42,12 +42,12 @@ print "Comparative File: $comparativeFile\n";
 print "Output File:  $outputFile\n";
 print "Excluded TAGS: @exclude\n";
 
+@exclude = split(',',join(',',@exclude));
 my %exclude;
 # make hash from tags to exclude for easier search
 foreach my $e (@exclude){
 	$exclude{$e} = 1;
 }
-
 open CP, '<:encoding(UTF-8)',$comparativeFile or die $!;
 open OUT, '>:encoding(UTF-8)',$outputFile or die $!;
 

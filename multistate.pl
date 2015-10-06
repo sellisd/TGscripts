@@ -43,20 +43,24 @@ if($help){
     die $usage;
 }
 my %choicesH; # hash filled with manually made choices 
-open my $choiceFH, '<:encoding(UTF-8)',$choiceFile or die $!;
-readline($choiceFH); # skip header
-while(my $line = readline($choiceFH)){
+if(-f $choiceFile){
+    open my $choiceFH, '<:encoding(UTF-8)', $choiceFile or die $!;
+    readline($choiceFH); # skip header
+    while(my $line = readline($choiceFH)){
 	chomp $line;
-	(my $language, my $meaning, my $warning, my $decision) = split " ", $line;
+	next if substr($line,0,1) eq '#';
+	(my $language, my $meaning, my $warning, my $decision) = split "\t", $line;
 	my $key = $language.$meaning.$warning;
 	$choicesH{$key} = $decision;
+	
+    }
+    close $choiceFH;
 }
-close $choiceFH
 
 open my $cpfh, '<:encoding(UTF-8)',$comparativeFile or die $!;
 open my $cgfh, '<:encoding(UTF-8)',$cognateFile or die $!;
 open OUT, '>:encoding(UTF-8)',$outputFile or die $!;
-
+open WARN, '>:encoding(UTF-8)', '../data/notResolvedWarnings.csv' or die $!;
 my $hashref;
 my $langref;
 ($hashref,$langref)=parseCognates($cgfh);
@@ -108,6 +112,15 @@ while(my $line = readline($cpfh)){
 			    my $header = ${$cognGroup}[1];
 			    my $indmed = ${$cognGroup}[2];
 			    my $isComp = ${$cognGroup}[3];
+############debug
+			    use Data::Dumper;
+			if ($meaning eq 'hungry' and $counter == 20){
+			    print STDERR $language,"\n";
+			    print STDERR $line,"\n";
+			    print Dumper @{$hashref->{$language.'.'.$w}};
+die;
+			}
+##############debug
 			    if($isComp==1){
 				push @compounds, $counterComp; #compound
 			    }
@@ -123,7 +136,6 @@ while(my $line = readline($cpfh)){
 			}
 			#pool is the datastructure entry for one language.word (dereferenced value of hash)
 			my @pool = @{$hashref->{$language.'.'.$w}}; #copy for shorthand reference
-
 #			print $counter,' ',$language,' ', $meaning,"\n";
 #			if ($counter == 12 and $meaning eq 'eye'){
 #			    print $language,' ',$meaning;
@@ -154,29 +166,50 @@ while(my $line = readline($cpfh)){
 					print OUT '.'.$indmed;                                    #     PRINT IND/MED
 				    }
 				}else{                                                            #   ELSE
-					#check if there is a precomputed solution
-				    print OUT 'Warning: No cognate set matches meaning (';        #   WARNING
+				    #check if there is a precomputed solution
+				    my $warnString = 'Warning: No cognate set matches meaning (';
 				    foreach my $warnings (@pool){			         
-					print OUT $warnings->[0],' ';
+					$warnString.= $warnings->[0].' ';
 				    }
-				    print OUT ')';			
+				    $warnString .=')';		    
+				    my $key = $language.$meaning.$warnString;
+				    if(defined($choicesH{$key})){
+					print OUT $choicesH{$key};
+				    }else{
+					print OUT $warnString;
+					print WARN $language,"\t",$meaning,"\t",$warnString,"\n"; 
+				    }
 				}			         
 			    }								         
 			}elsif($#matches > 0){                                                    # ELSE IF match> 1
 			    if(!@matchesNotCompound){                                             #   IF all matches are compound
-				print OUT 'Warning: All matches are compound (';                  #     WARNING
-				foreach my $warnings (@pool){
-				    print OUT $warnings->[0],' ';
+			    	my $warnString = 'Warning: All matches are compound (';
+					foreach my $warnings (@pool){
+				    $warnString .= $warnings->[0].' ';
 				}
-				print OUT ')';
+				$warnString .= ')';
+				my $key = $language.$meaning.$warnString;
+				if(defined($choicesH{$key})){
+				    print OUT $choicesH{$key};
+				}else{
+				    print OUT $warnString;
+				    print WARN $language,"\t",$meaning,"\t",$warnString,"\n";
+				}
 			    }elsif($#matchesNotCompound == 0){                                    #   ELSE IF one match is not compound
 				print OUT $pool[$matchesNotCompound[0]][0];                       #     PRINT
 			    }elsif($#matchesNotCompound > 0){                                     #   ELSE IF more than one matches are not compound
-				print OUT 'Warning: More than one cognate set matches meaning ('; #     WARNING
+				my $warnString = 'Warning: More than one cognate set matches meaning ('; #     WARNING
 				foreach my $warnings (@pool){
-				    print OUT $warnings->[0],' ';
+				    $warnString .= $warnings->[0].' ';
 				}
-				print OUT ')';
+				$warnString .= ')';
+				my $key = $language.$meaning.$warnString;
+				if(defined($choicesH{$key})){
+				    print OUT $choicesH{$key};
+				}else{
+				    print OUT $warnString;
+				    print WARN $language,"\t",$meaning,"\t",$warnString,"\n";		
+				}
 			    }
 			}
 			print OUT ';';
@@ -192,6 +225,7 @@ while(my $line = readline($cpfh)){
 }
 close $cgfh;
 close $cpfh;
+close WARN;
 
 sub parseCognates{
     my $cgfh = shift @_;
@@ -226,7 +260,7 @@ sub parseCognates{
 		die $line;
 	    }
 	    # Do not filter Xs
-	    # next if $ar[0] =~ /^.*X$/;
+	    next if $ar[0] =~ /^.*X$/;
 	    my $counter = 0;
 	    my $root = shift @ar;
 	    $root =~ s/^\s*(\S+)\s*$/$1/;
@@ -266,6 +300,7 @@ sub parseCognates{
 	}
 	$lineCounter++;
     }
+#    print Dumper %hash;die;
     return (\%hash,\@languages);
 }
 
