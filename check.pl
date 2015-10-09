@@ -13,8 +13,9 @@ my $check = 'nf';
 my $help;
 my $comparativeFile;
 my $cognateFile;
-my $outputfile = 'output.csv';
-my $errorfile = 'errors.csv';
+my $outputPath = '/home/dsellis/Dropbox/TGnobos/data/';
+my $outputfile = $outputPath.'output.csv';
+my $errorfile = $outputPath.'errors.csv';
 
 my $usage = <<HERE;
 check.pl Version $Version
