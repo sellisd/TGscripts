@@ -18,10 +18,12 @@ A series of validation scripts check for discrepancies between the two tables or
  - `./makeX.pl`
 
 ## Transform data
+
 For the phylogenetic analysis we create character matrices.
-`./multistate.pl -cognate ../data/TG_cognates_online_MASTER.csv -comparative ../data/TG_comparative_lexical_online_MASTER.csv -output ../data/multistate.csv > ../data/multistate.errors.txt`
+`./multistate.pl -cognate ../data/TG_cognates_online_MASTER.csv -comparative ../data/TG_comparative_lexical_online_MASTER.csv -output ../data/multistate.csv -choices ../data/choices.csv > ../data/multistate.errors.txt`
 which should not produce any errors
 manually remove warnings
+
 ## GA coding (Grey & Attkinson: multistate + binary recoding)
 
 IND and MED are completely ignored

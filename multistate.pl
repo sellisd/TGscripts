@@ -93,8 +93,7 @@ while(my $line = readline($cpfh)){
 		my @words = @{$wordsref->{'words'}};
 		if (defined($err)){
 		    print $err, ' at ', $meaning,"\n";
-		    next;
-		}
+		}else{
 		foreach my $w (@words){
 		    $w = NFD($w); #decompose & reorder canonically
 		    my $language = ${$langref}[$counter];
@@ -112,20 +111,11 @@ while(my $line = readline($cpfh)){
 			    my $header = ${$cognGroup}[1];
 			    my $indmed = ${$cognGroup}[2];
 			    my $isComp = ${$cognGroup}[3];
-############debug
-			    use Data::Dumper;
-			if ($meaning eq 'hungry' and $counter == 20){
-			    print STDERR $language,"\n";
-			    print STDERR $line,"\n";
-			    print Dumper @{$hashref->{$language.'.'.$w}};
-die;
-			}
-##############debug
 			    if($isComp==1){
-				push @compounds, $counterComp; #compound
+					push @compounds, $counterComp; #compound
 			    }
 			    if($header eq $meaning){
-				push @matches, $counterComp;
+					push @matches, $counterComp;
 				if($isComp==1){ #matching compound
 				}else{
 				    push @matchesNotCompound, $counterComp;
@@ -215,6 +205,7 @@ die;
 			print OUT ';';
 		    }
 		}
+	    }
 	    }
 	    print OUT "\t";
 	    $counter++;
