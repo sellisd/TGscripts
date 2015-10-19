@@ -100,6 +100,7 @@ while(my $line = readline($cpfh)){
 		    if (!defined($hashref->{$language.'.'.$w})){
 			print "inconsistency at: $language $meaning, $w\n";
 		    }else{
+
 			#loop through to find which are compounds and which match with meaning
 			my @matches;
 			my @matchesNotCompound;
@@ -167,7 +168,7 @@ while(my $line = readline($cpfh)){
 					print OUT $choicesH{$key};
 				    }else{
 					print OUT $warnString;
-					print WARN $language,"\t",$meaning,"\t",$warnString,"\n"; 
+					print WARN $language,"\t",$meaning,"\t",$warnString, "\n";
 				    }
 				}			         
 			    }								         

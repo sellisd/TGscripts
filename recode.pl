@@ -19,6 +19,7 @@ while(my $line = <IN>){     #read file line by line
     my @ar = split "\t", $line;    
     if($lineCounter == 0){
 	@languages = @ar;
+	$languages[0] = ""; # replace english with emtpy value
 	print join("\t", @languages);
 	print "\n";
     }elsif($lineCounter > 0){

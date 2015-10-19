@@ -48,4 +48,4 @@ for(m in meanings){
 }
 multistateDF <- data.frame(multistateM[, -1], row.names = multistateM[, 1])
 names(multistateDF) <- languages
-write.table(multistateDF, file = "~/projects/tg/chapacuran/multistate.tab", sep = "\t", quote = FALSE, row.names = TRUE, col.names = languagesU)
+write.table(multistateDF, file = "~/projects/tg/chapacuran/chMultistate.tab", sep = "\t", quote = FALSE, row.names = TRUE, col.names = languagesU)

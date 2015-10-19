@@ -6,7 +6,7 @@ use feature 'unicode_strings';
 
 my $file = $ARGV[0];
 my $output;
-die unless -f $file;
+die "no such file: $file" unless -f $file;
 if (defined($ARGV[1])){
     $output = $ARGV[1];
 }else{

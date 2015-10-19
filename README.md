@@ -1,5 +1,7 @@
 # TG analysis
 
+Current wokflow is in gdocs workflow
+
 ## Preprocess data
 The first step is to reformat the data from google docs to tab delimited files in order to perform the analysis. To do so:
 
@@ -9,13 +11,20 @@ The first step is to reformat the data from google docs to tab delimited files i
  - remove all extra columns and rows, leave only one header row with languages and two left columns, one with TAGS and one with English
  - save as -> Text .csv -> edit saving settings
  - field delimiter tab, text delimiter none, do not save cells as shown
- 
+ - Remove columns with Guajajara and Guarayu-Swintha
+
 ## Validate data
 A series of validation scripts check for discrepancies between the two tables or other common errors (typos etc)
 
- - `./check.pl -check nf -comparative ../data/TG_comparative_lexical_online_MASTER.csv  -cognate ../data/TG_cognates_online_MASTER.csv`
- - `./threedots.pl`
- - `./makeX.pl`
+    ./check.pl -check nf -comparative ../data/TG_comparative_lexical_online_MASTER.csv  -cognate ../data/TG_cognates_online_MASTER.csv
+
+Validate ...
+
+    ./threedots.pl
+
+Compare cognates and comparative files and make sure lax rows are marked in both files the same way (X and @ symbols)
+
+    ./makeX.pl
 
 ## Transform data
 
