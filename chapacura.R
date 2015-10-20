@@ -31,8 +31,8 @@ for(m in meanings){
       if(length(wordI) != 1){
         if(length(wordI) > 0){
           # multiple words
+          stop("Error: multiple words")
           states[counter] <- paste(wordI, collapse = ",")
-#          state[counter] <- 
         }else{
           stop("no words?!")
         }
