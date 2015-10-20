@@ -37,7 +37,7 @@ for(m in meanings){
           stop("no words?!")
         }
       }else{
-        state[counter] <- wordI
+        states[counter] <- wordI
       }
 #      states[counter] <- paste(wordI, collapse = ",")
     }
@@ -46,6 +46,6 @@ for(m in meanings){
   multistateM[matrixRowCounter,] <- c(m, states)
   matrixRowCounter <- matrixRowCounter + 1
 }
-multistateDF <- data.frame(multistateM[, -1], row.names = multistateM[, 1])
-names(multistateDF) <- languages
-write.table(multistateDF, file = "~/projects/tg/chapacuran/chMultistate.tab", sep = "\t", quote = FALSE, row.names = TRUE, col.names = languagesU)
+multistate2save <- cbind(c("", languagesU), t(multistateM))
+# Save
+write.table(multistate2save, file = "~/projects/tg/chapacuran/chMultistate.tr.tab", sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
