@@ -13,6 +13,15 @@ emptyLineB <- apply(ga[, c(-1,-2, -3)], 1, noWords)
 if(any(emptyLineB)){
   stop(paste("emtpy line", which(emptyLineB)))
 }
+# check if states are unique for each meaning
+for(m in meanings){
+  #m <- meanings[1]
+  setLetters <- ga[which(ga[,2] == m), 3]
+  if(!isTRUE(all.equal(setLetters,LETTERS[1:length(setLetters)]))){
+    stop(paste("problem with set values at",m))
+  }
+}
+
 # add ASCII language names as column headers
 languagesU <- ga[1, c(-1, -2, -3)] # unicode languages
 header <- ga[1, ]
