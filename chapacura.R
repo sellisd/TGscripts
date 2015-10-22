@@ -1,8 +1,17 @@
 # do not read languages as header to preserve the Unicode
 ga <- read.csv("~/projects/tg/chapacuran/chapacura-207-GA.csv", sep = "\t", as.is = TRUE, header = FALSE)
 meanings <- unique(ga[-1, 2])
+# validate input
 if(length(unique(gsub(" ", "", meanings))) != length(meanings)){
   stop("if space characters are the only difference between two entries, then it is probably something mistyped, e.g. good* vs good *")
+}
+noWords <- function(a){
+  # check if there are no words in a line
+  all(a == "?" | a == "-")
+}
+emptyLineB <- apply(ga[, c(-1,-2, -3)], 1, noWords)
+if(any(emptyLineB)){
+  stop(paste("emtpy line", which(emptyLineB)))
 }
 # add ASCII language names as column headers
 languagesU <- ga[1, c(-1, -2, -3)] # unicode languages
