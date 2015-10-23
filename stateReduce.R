@@ -11,7 +11,12 @@ reduce <- function(entry, lookup = lookup){
   if(all(reducedEntry == "?")){
     newEntry <- "?"    
   }else{
-    newEntry <- paste(reducedEntry[reducedEntry != "?"], collapse = "&")
+    newEntryV <- reducedEntry[reducedEntry != "?"]
+    if(length(newEntryV) > 1){
+      newEntry <- paste("(", paste(reducedEntry[reducedEntry != "?"], collapse = ","), ")", sep = "")
+    }else{
+      newEntry <- newEntryV
+    }
   }
   newEntry
 }
