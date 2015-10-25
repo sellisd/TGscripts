@@ -252,7 +252,7 @@ sub parseCognates{
 		die $line;
 	    }
 	    # Do not filter Xs
-	    next if $ar[0] =~ /^.*X$/;
+	    #next if $ar[0] =~ /^.*X$/;
 	    my $counter = 0;
 	    my $root = shift @ar;
 	    $root =~ s/^\s*(\S+)\s*$/$1/;

@@ -41,7 +41,9 @@ if(length(emptyMeaning) != 0){ # if there are empty meanings, remove them
 # test for unexpected symbols in input
 wrongSymbols <- unlist(strsplit(as.vector(unlist(mst)), ""))
 wrongSymbols <- unique(wrongSymbols[!wrongSymbols %in% c(alphabet, "&", "?")])
-stop("unexpected symbols not part of the expected alphabet: ", wrongSymbols)
+if(length(wrongSymbols) != 0){
+  stop("unexpected symbols not part of the expected alphabet: ", wrongSymbols)
+}
 reducedM <- matrix(ncol = ncol(mst), nrow = nrow(mst))
 #i <- 7
 for(i in c(1:length(meanings))){
