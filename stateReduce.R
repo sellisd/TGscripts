@@ -1,6 +1,7 @@
 # reduce states
 # INPUT multistate encoded file (transposed)
 # OUTPUT multistate file with no more than 10 states (MrBayes restriction)
+
 mesquiteLetters <- c(1:8,11:14,16:26)
 alphabet <- c(0:9, LETTERS[mesquiteLetters], letters[mesquiteLetters])
 
@@ -60,17 +61,24 @@ for(i in c(1:length(meanings))){
   reducedStates <- names(charHist[charHist != "?"])
   charHist[reducedStates] <- alphabet[c(1:length(reducedStates))] # is there any discrepancy between reduced State names and the expected alphabet?
   stateNoCur <- length(unique(charHist[charHist != "?"]))
-  if(stateNo < stateNoCur){
+  if(stateNoCur > 10){
+    print(paste("more than 10 states at:", meanings[i], stateNoCur))
+  }
+  if(stateNoMax < stateNoCur){
     stateNoMax <- stateNoCur
   }
   reducedM[, i] <- unlist(lapply(colChar, reduce, lookup = charHist))
 }
 
 if(stateNoMax > 10){
-  warning("more than 10 states!!!")
+  print(stateNoMax)
+  #warning("more than 10 states!!!")
 }else{
   cat("maximum number of states:", stateNoMax,"\n")
 }
 DF <- cbind(c("", languages), rbind(meanings, reducedM))
 
-write.table(DF, file = "~/projects/tg/data/tgMultistateReduced.tr.csv", sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+#write.table(DF, file = "~/projects/tg/data/tgMultistateReduced.tr.csv", sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+#write.nexus.data
+library(ape)
+write.nexus.data(DF, file = "~/projects/tg/data/tgMultistateReduced.tr.nexus")
