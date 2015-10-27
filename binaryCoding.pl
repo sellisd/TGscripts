@@ -3,19 +3,35 @@ use warnings;
 use strict;
 use Encode;
 use feature 'unicode_strings';
+use Getopt::Long;
 
 #Usage:
 # input tab separated file
 #make binary ecnoding of comparative file
-
-my $file = $ARGV[0];
+my $help;
+my $threedots = '...';
+my $file;
 my $output;
-die unless -f $file;
-if (defined($ARGV[1])){
-    $output = $ARGV[1];
-}else{
-    $output = 'table.csv';
+my $usage = <<HERE;
+USAGE binaryCoding.pl [OPTIONS = XX] inputFileName outputFileName
+where OPTIONS can be one or more of the following:
+  -input  FILENAME path and file name of input (cognate .csv file)
+  -output FILENAME path and file name of output file
+  -threedots       What symbol is used in the input either ... (default) or ?.
+  -help or -?      this help screen
+HERE
+unless(GetOptions(
+	   'input=s'     => \$file,
+	   'output=s'    => \$output,
+	   'threedots=s' => \$threedots,
+	   'help|?'      => \$help
+       )){die $usage;}
+if($help){
+    die $usage;
 }
+
+die $usage unless -f $file;
+
 my $outSep = "\t";
 my $inSep = "\t";
 #my $file = 'Sampe_TG_coding.csv';
@@ -68,7 +84,7 @@ while (my $line = <IN>){
 	    if ($title ne uc($title)){ #lowercase
 		$dots = $word;
 	    }elsif($title eq uc($title)){
-		if(substr($dots,0,3) ne '...'){
+		if(substr($dots,0,3) ne $threedots){
 		    if($word ne ''){
 			print OUT 1,$outSep;
 		    }elsif($word eq ''){
@@ -76,7 +92,7 @@ while (my $line = <IN>){
 		    }else{
 			die "1. ups!\n"
 		    }
-		}elsif(substr($dots,0,3) eq '...'){
+		}elsif(substr($dots,0,3) eq $threedots){
 		    if($word){
 			print OUT 1,$outSep;
 		    }elsif($word eq ''){
@@ -97,7 +113,7 @@ while (my $line = <IN>){
 # if empty
 #     if word 1
 #     if empty 0
-# if ...
+# if threedots
 #     if word 1
 #     if empty ?
 # http://www.thegeekstuff.com/2011/12/perl-and-excel/
