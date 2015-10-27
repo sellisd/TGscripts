@@ -1,5 +1,16 @@
+#!/usr/bin/env Rscript
+args = commandArgs(trailingOnly = TRUE)
+if(length(args) < 2){
+  stop("missing input/output file name(s)")
+}
+inputFile <- args[1]  
+outputFile <- args[2]
+# Chapacuran:
+# Rscript --vanilla ~/projects/tg/chapacuran/chapacura-207-GA.csv ~/projects/tg/chapacuran/chMultistate.tr.tab
+# Cariban:
+# Rscript --vanilla ~/projects/tg/cariban/cariban4multistate.csv ~/projects/tg/cariban/cbMultistate.tr.tab
 # do not read languages as header to preserve the Unicode
-ga <- read.csv("~/projects/tg/chapacuran/chapacura-207-GA.csv", sep = "\t", as.is = TRUE, header = FALSE)
+ga <- read.csv(inputFile, sep = "\t", as.is = TRUE, header = FALSE)
 meanings <- unique(ga[-1, 2])
 # validate input
 if(length(unique(gsub(" ", "", meanings))) != length(meanings)){
@@ -11,15 +22,29 @@ noWords <- function(a){
 }
 emptyLineB <- apply(ga[, c(-1,-2, -3)], 1, noWords)
 if(any(emptyLineB)){
-  stop(paste("emtpy line", which(emptyLineB)))
+  meaningsColumn <- ga[, 2]
+  subsetColumn <- ga[, 3]
+  stop(paste("empty line(s):", paste(meaningsColumn[which(emptyLineB)], subsetColumn[which(emptyLineB)], collapse =", ")))
 }
 # check if states are unique for each meaning
 for(m in meanings){
   #m <- meanings[1]
   setLetters <- ga[which(ga[,2] == m), 3]
-  if(!isTRUE(all.equal(setLetters,LETTERS[1:length(setLetters)]))){
-    stop(paste("problem with set values at",m))
+  setValues <- character()
+  if(isTRUE(all.equal(setLetters,LETTERS[1:length(setLetters)]))){
+    setValues <- append(setValues, "alphabetical")
+  }else if (isTRUE(all.equal(setLetters,as.character(c(1:length(setLetters)))))){
+    setValues <- append(setValues, "numeric")
+  }else{
+    stop("unknown set values, or error at: ",m)
   }
+}
+if(all(setValues == "alphabetical")){
+  cat("set values alphabetical (ABC...) \n")
+}else if (all(setValues == "numeric")){
+  cat("set values numeric (123...) \n")
+}else{
+  stop("mixed set values")
 }
 
 # add ASCII language names as column headers
@@ -66,4 +91,4 @@ for(m in meanings){
 }
 multistate2save <- cbind(c("", languagesU), t(multistateM))
 # Save
-write.table(multistate2save, file = "~/projects/tg/chapacuran/chMultistate.tr.tab", sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+write.table(multistate2save, file = outputFile, sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
