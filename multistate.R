@@ -6,10 +6,11 @@ if(length(args) < 2){
 inputFile <- args[1]  
 outputFile <- args[2]
 # Chapacuran:
-# Rscript --vanilla ~/projects/tg/chapacuran/chapacura-207-GA.csv ~/projects/tg/chapacuran/chMultistate.tr.tab
+# Rscript --vanilla multistate.R ~/projects/tg/chapacuran/chapacura-207-GA.csv ~/projects/tg/chapacuran/chMultistate.tr.tab
 # Cariban:
-# Rscript --vanilla ~/projects/tg/cariban/cariban4multistate.csv ~/projects/tg/cariban/cbMultistate.tr.tab
+# Rscript --vanilla multistate.R ~/projects/tg/cariban/cariban4multistate.csv ~/projects/tg/cariban/cbMultistate.tr.tab
 # do not read languages as header to preserve the Unicode
+#inputFile <- "~/projects/tg/cariban/cariban4multistate.csv"
 ga <- read.csv(inputFile, sep = "\t", as.is = TRUE, header = FALSE)
 meanings <- unique(ga[-1, 2])
 # validate input
@@ -60,13 +61,14 @@ if(length(unique(languages)) != length(unique(languagesU))){
 #languages <- names(ga)[c(-1,-2,-3)] # exclude No, English and Set columns
 multistateM <- matrix(ncol = (1 + length(languages)), nrow = length(meanings))
 matrixRowCounter <- 1
+
 for(m in meanings){
   # m <- meanings[1]
   states <- character(length(languages))
   counter <- 1
   for(l in languages){
     #l <- languages[1]
-    wordV <- ga[which(ga$English==m),l]
+    wordV <- ga[which(ga[, 2]==m),l]
     if(all(wordV == "?")){
       states[counter] <- "?"
     }else{
@@ -74,10 +76,10 @@ for(m in meanings){
       if(length(wordI) != 1){
         if(length(wordI) > 0){
           # multiple words
-          stop("Error: multiple words")
+          print(paste("Warning: multiple words at: ", l, m))
           states[counter] <- paste(wordI, collapse = ",")
         }else{
-          stop("no words?!")
+          print(paste("Warning: no words at: ", l, m))
         }
       }else{
         states[counter] <- wordI
@@ -92,3 +94,4 @@ for(m in meanings){
 multistate2save <- cbind(c("", languagesU), t(multistateM))
 # Save
 write.table(multistate2save, file = outputFile, sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+#warnings()
