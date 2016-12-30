@@ -9,7 +9,7 @@ use Getopt::Long;
 # input tab separated file
 #make binary ecnoding of comparative file
 my $help;
-my $threedots = '...';
+my $threedots = '?';
 my $file;
 my $output;
 my $usage = <<HERE;
@@ -17,7 +17,7 @@ USAGE binaryCoding.pl [OPTIONS = XX] inputFileName outputFileName
 where OPTIONS can be one or more of the following:
   -input  FILENAME path and file name of input (cognate .csv file)
   -output FILENAME path and file name of output file
-  -threedots       What symbol is used in the input either ... (default) or ?.
+  -threedots       What symbol is used in the input either ? (default) or ...
   -help or -?      this help screen
 HERE
 unless(GetOptions(
