@@ -1,43 +1,122 @@
 #!/usr/bin/env python
-from __future__ import print_function, division
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MultiLabelBinarizer
 import re
-# # Transform Multistate to binary format with new
-# tables (Bantu project)
-multistate = pd.read_table("../data/Bantu/WCB binary coding NEW SET 20190103 - _basic_ vocabulary concepts.tsv",
-  sep = "\t",
-  index_col = 1)
-#check for empty entries
-assert multistate.isnull().any().any() == False
-
-coding = []
-for column in multistate:
-  if column[-1] == '#':
-    vector = multistate[column].str.split('\s*[,;]\s*')
-    mlb = MultiLabelBinarizer()
-    try:
-        encodedArray = mlb.fit_transform(vector)
-    except:
-        print(vector)
-        continue
-    header = [column[:-1] + i for i in mlb.classes_]
-    encoded = pd.DataFrame(encodedArray, columns = header)
-    missing_data_category = column[:-1] + '?'
-    if missing_data_category in encoded: #if missing data
-      encoded.loc[encoded[missing_data_category]==1]='?' # state of missing data
-      encoded = encoded.drop(labels=missing_data_category, axis = 1)
-    coding.append(encoded)
-coding = pd.concat(coding,axis=1)
-coding.index = multistate.index
-# no need to transpose
-#coding_transposed = coding.transpose()
-coding.columns = [re.sub('[\s\(\)]+','_',i) for i in coding.columns]
-coding.to_csv("../data/Bantu/coding.csv", sep="\t")
+import typer
 
 
-# sannity check
+def import_file(filename):
+    """Import matrix, assumes tab-delimited file
+
+      Args:
+          filename (string): path and file name.
+
+      Returns:
+          dataframe: multistate dataframe
+    """
+    multistate = pd.read_table(filename,
+                               sep="\t",
+                               dtype=str,
+                               index_col=0)
+    return multistate
+
+pd.set_option("display.max_rows", None, "display.max_columns", None)
+
+def check_format(df):
+    """Validate input format
+
+    Args:
+        multistate (dataframe): multistate dataframe
+    """
+    if empty_entries(df):
+        print("Error: file has empty entries")
+        return(False)
+    if invalid_characters_in_entries(df):
+        print("Error: invalid characters in entries (valid are only , ?0-9)")
+        return(False)
+    return True
+
+
+def empty_entries(df):
+    """Check if there are empty entries
+
+    Args:
+        df (dataframe): multistate dataframe
+
+    Returns:
+        Bool: True for valid format
+    """
+    if df.isnull().any().any():
+        return True
+    return False
+
+
+def invalid_characters_in_entries(df):
+    r = re.compile(r'^[0-9\s,?]+$')
+    if df.applymap(lambda x: bool(r.match(x))).all().all():
+        return False
+    return True
+
+
+def to_binary(multistate):
+    """Transform multistate to binary
+
+    Args:
+        multistate (dataframe): Multistate
+
+    Returns:
+        binary (dataframe): Binary dataframe
+    """
+    coding = []
+    for column in multistate:
+        vector = multistate[column].str.split('\s*[,;]\s*')
+        mlb = MultiLabelBinarizer()
+        try:
+            encodedArray = mlb.fit_transform(vector)
+        except:
+            print(vector)
+            continue
+        header = [column + i for i in mlb.classes_]
+        encoded = pd.DataFrame(encodedArray, columns=header)
+        missing_data_category = column + '?'
+        if missing_data_category in encoded:  # if missing data
+            encoded.loc[encoded[missing_data_category] == 1] = '?'  # state of missing data
+            encoded = encoded.drop(labels=missing_data_category, axis=1)
+        coding.append(encoded)
+    coding = pd.concat(coding, axis=1)
+    coding.index = multistate.index
+    coding.columns = [re.sub('[\s\(\)]+','_',i) for i in coding.columns]
+    return coding
+
+
+def save_matrix(filename, df):
+    """Save output to file
+
+    Args:
+        filename (string): Path and filename for output
+    """
+    df.to_csv(filename, sep="\t")
+
+
+def main(input: str, output: str):
+    multistate = import_file(input)
+    if check_format(multistate):
+        binary = to_binary(multistate)
+        save_matrix(output, binary)
+    else:
+        print("Aborting transformation due to invalid input")
+
+
+if __name__ == "__main__":
+    typer.run(main)
+
+# # strip white spaces from headers
+# multistate = multistate.rename(columns=lambda x: x.strip())
+
+
+
+# sanity check
 # coding_manually = pd.read_table("../data/Bantu/BantuCognates 20181109 - coding.tsv",
 #   sep = "\t",
 #   index_col = 1)
