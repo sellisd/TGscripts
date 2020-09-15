@@ -21,7 +21,12 @@ def import_file(filename):
                                index_col=0)
     return multistate
 
+
 pd.set_option("display.max_rows", None, "display.max_columns", None)
+
+
+def transpose(df):
+    return(df.transpose())
 
 def check_format(df):
     """Validate input format
@@ -99,8 +104,14 @@ def save_matrix(filename, df):
     df.to_csv(filename, sep="\t")
 
 
-def main(input: str, output: str):
+app = typer.Typer()
+
+
+@app.command()
+def transform(input: str, output: str, transpose: bool = False):
     multistate = import_file(input)
+    if transpose:
+        multistate = multistate.transpose()
     if check_format(multistate):
         binary = to_binary(multistate)
         save_matrix(output, binary)
@@ -109,20 +120,4 @@ def main(input: str, output: str):
 
 
 if __name__ == "__main__":
-    typer.run(main)
-
-# # strip white spaces from headers
-# multistate = multistate.rename(columns=lambda x: x.strip())
-
-
-
-# sanity check
-# coding_manually = pd.read_table("../data/Bantu/BantuCognates 20181109 - coding.tsv",
-#   sep = "\t",
-#   index_col = 1)
-# header_manual = ['heart'+str(i) for i in range(1, 10)]
-# header_coding = ['heart'+'_'+str(i) for i in range(1, 10)]
-# a = coding_manually[header_manual]
-# b = coding[header_coding]
-# b.columns = a.columns
-# assert a.equals(b) == True
+    app()
